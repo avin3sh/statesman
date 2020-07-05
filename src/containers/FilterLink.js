@@ -1,16 +1,32 @@
-import { connect } from 'react-redux'
-import { setVisibilityFilter } from '../actions'
-import Link from '../components/Link'
+import React, { useState, useEffect } from "react";
 
-const mapStateToProps = (state, ownProps) => ({
-  active: ownProps.filter === state.visibilityFilter
-})
+import { setVisibilityFilter } from "../statesman/broadcastChannels";
+import reader from "../statesman/reader";
+import Link from "../components/Link";
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
-  onClick: () => dispatch(setVisibilityFilter(ownProps.filter))
-})
+const FilterLink = ({ children, filter }) => {
+  const [active, setActive] = useState(false);
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Link)
+  useEffect(() => {
+    const state = reader();
+    if (filter === state.filter) setActive(true);
+  }, []);
+
+  new BroadcastChannel("SET_VISIBILITY_FILTER").onmessage = (e) => {
+    const stateFilter = e.data;
+    if (filter === stateFilter) setActive(true);
+    else setActive(false);
+  };
+
+  const setFilter = () => {
+    setVisibilityFilter(filter);
+  };
+
+  return (
+    <Link active={active} onClick={setFilter}>
+      {children}
+    </Link>
+  );
+};
+
+export default FilterLink;

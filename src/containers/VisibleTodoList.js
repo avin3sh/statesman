@@ -1,30 +1,39 @@
-import { connect } from 'react-redux'
-import { toggleTodo } from '../actions'
-import TodoList from '../components/TodoList'
-import { VisibilityFilters } from '../actions'
+import React, { useState, useEffect } from "react";
+
+import { toggleTodo } from "../statesman/broadcastChannels";
+import reader from "../statesman/reader";
+
+import TodoList from "../components/TodoList";
 
 const getVisibleTodos = (todos, filter) => {
   switch (filter) {
-    case VisibilityFilters.SHOW_ALL:
-      return todos
-    case VisibilityFilters.SHOW_COMPLETED:
-      return todos.filter(t => t.completed)
-    case VisibilityFilters.SHOW_ACTIVE:
-      return todos.filter(t => !t.completed)
+    case "SHOW_ALL":
+      return todos;
+    case "SHOW_COMPLETED":
+      return todos.filter((t) => t.completed);
+    case "SHOW_ACTIVE":
+      return todos.filter((t) => !t.completed);
     default:
-      throw new Error('Unknown filter: ' + filter)
+      throw new Error("Unknown filter: " + filter);
   }
-}
+};
 
-const mapStateToProps = state => ({
-  todos: getVisibleTodos(state.todos, state.visibilityFilter)
-})
+const VisibleTodoList = () => {
+  const [todos, setTodos] = useState([]);
 
-const mapDispatchToProps = dispatch => ({
-  toggleTodo: id => dispatch(toggleTodo(id))
-})
+  useEffect(() => {
+    const state = reader();
+    const filteredTodos = getVisibleTodos(state.todos, state.filter);
+    setTodos(filteredTodos);
+  }, []);
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TodoList)
+  new BroadcastChannel("MAIN").onmessage = (e) => {
+    const state = e.data;
+    const filteredTodos = getVisibleTodos(state.todos, state.filter);
+    setTodos(filteredTodos);
+  };
+
+  return <TodoList toggleTodo={toggleTodo} todos={todos} />;
+};
+
+export default VisibleTodoList;

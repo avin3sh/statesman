@@ -8,8 +8,9 @@ const FilterLink = ({ children, filter }) => {
   const [active, setActive] = useState(false);
 
   useEffect(() => {
-    const state = reader();
-    if (filter === state.filter) setActive(true);
+    reader().then((state) => {
+      if (filter === state.filter) setActive(true);
+    });
   }, []);
 
   new BroadcastChannel("SET_VISIBILITY_FILTER").onmessage = (e) => {

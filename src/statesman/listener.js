@@ -1,23 +1,28 @@
-import reader from "./reader";
-import writer from "./writer";
-
 const listenBroadcasts = () => {
+  let state = {
+    // initial state
+    todos: [],
+    filter: "SHOW_ALL",
+  };
+
   const bcState = new BroadcastChannel("MAIN");
 
+  new BroadcastChannel("REQUEST_STATE").onmessage = (e) => {
+    bcState.postMessage(state);
+  };
+
   new BroadcastChannel("ADD_TODO").onmessage = (e) => {
-    const state = reader();
     const todo = { text: e.data, completed: false };
 
     let newState = state;
     newState.todos.push(todo);
 
-    writer(newState);
+    state = newState;
 
     bcState.postMessage(newState);
   };
 
   new BroadcastChannel("TOGGLE_TODO").onmessage = (e) => {
-    const state = reader();
     const todoText = e.data;
 
     let newState = state;
@@ -25,19 +30,18 @@ const listenBroadcasts = () => {
       todo.text === todoText ? { ...todo, completed: !todo.completed } : todo
     );
 
-    writer(newState);
+    state = newState;
 
     bcState.postMessage(newState);
   };
 
   new BroadcastChannel("SET_VISIBILITY_FILTER").onmessage = (e) => {
-    const state = reader();
     const filter = e.data;
 
     let newState = state;
     newState.filter = filter;
 
-    writer(newState);
+    state = newState;
 
     bcState.postMessage(newState);
   };

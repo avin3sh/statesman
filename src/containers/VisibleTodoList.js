@@ -22,9 +22,7 @@ const VisibleTodoList = () => {
   const [todos, setTodos] = useState([]);
 
   useEffect(() => {
-    const state = reader();
-    const filteredTodos = getVisibleTodos(state.todos, state.filter);
-    setTodos(filteredTodos);
+    reader();
   }, []);
 
   new BroadcastChannel("MAIN").onmessage = (e) => {
